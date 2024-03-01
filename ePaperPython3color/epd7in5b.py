@@ -25,12 +25,12 @@
  #
 
 import epdif
-import Image
+from PIL import Image
 import RPi.GPIO as GPIO
 
 # Display resolution
-EPD_WIDTH       = 640
-EPD_HEIGHT      = 384
+EPD_WIDTH       = 800
+EPD_HEIGHT      = 400
 
 # EPD7IN5 commands
 PANEL_SETTING                               = 0x00

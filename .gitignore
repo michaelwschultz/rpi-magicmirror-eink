@@ -1,6 +1,9 @@
 
 # Created by https://www.gitignore.io/api/node,macos,python,windows
 
+
+screenshot.png
+
 ### macOS ###
 # General
 .DS_Store

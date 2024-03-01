@@ -26,38 +26,50 @@
  # THE SOFTWARE.
  ##
 
-import epd7in5b
-import Image
-import ImageDraw
-import ImageFont
+import logging
+from waveshare_epd import epd7in5b_V2
+
+from PIL import Image, ImageDraw, ImageOps
 #import imagedata
 
-EPD_WIDTH = 640
-EPD_HEIGHT = 384
+logging.basicConfig(level=logging.DEBUG)
 
-def main():
-    epd = epd7in5b.EPD()
+EPD_WIDTH = 800
+EPD_HEIGHT = 480
+
+try:
+    epd = epd7in5b_V2.EPD()
     epd.init()
 
-    # For simplicity, the arguments are explicit numerical coordinates
-    # image_red = Image.new('1', (EPD_WIDTH, EPD_HEIGHT), 255)    # 255: clear the frame
-    # draw_red = ImageDraw.Draw(image_red)
-    # image_black = Image.new('1', (EPD_WIDTH, EPD_HEIGHT), 255)    # 255: clear the frame
-    # draw_black = ImageDraw.Draw(image_black)
-    # font = ImageFont.truetype('/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf', 24)
-    # draw_red.rectangle((0, 6, 640, 40), fill = 0)
-    # draw_red.text((200, 10), 'e-Paper demo', font = font, fill = 255)
-    # draw_red.rectangle((200, 80, 600, 280), fill = 0)
-    # draw_red.chord((240, 120, 580, 220), 0, 360, fill = 255)
-    # draw_black.rectangle((20, 80, 160, 280), fill = 0)
-    # draw_red.chord((40, 80, 180, 220), 0, 360, fill = 0)
-    # epd.display_frame(epd.get_frame_buffer(image_black),epd.get_frame_buffer(image_red))
+    # display image
+    screenshot = Image.open('screenshot.png')
 
-    # display images
-    frame_black = epd.get_frame_buffer(Image.open('black.png'))
-    frame_red = epd.get_frame_buffer(Image.open('white.png'))
-    epd.display_frame(frame_black, frame_red)
+    # Create a new image with RGBA mode to strip out the red channel
+    red_image = Image.new("RGBA", screenshot.size)
+    pixels = screenshot.load()
+    new_pixels = red_image.load()
 
+   # loop through every pixel to determine the red pixels and remove the ones that aren't
+    for i in range(screenshot.size[0]):
+      for j in range(screenshot.size[1]):
+        r, g, b, a = pixels[i, j]
+        # Check if red is the dominant color
+        if r > g and r > b:
+            # Keep the red pixel as is, make it fully opaque in the new image
+            new_pixels[i, j] = (0, 0, 0, 255)
+        else:
+            # Make non-red pixels transparent or set to a background color
+            # For transparency, set the alpha to 0
+            new_pixels[i, j] = (255, 255, 255, 0)  # This makes non-red areas white "transparent"
 
-if __name__ == '__main__':
-    main()
+    frame_black = epd.getbuffer(screenshot)
+    frame_red = epd.getbuffer(red_image)
+
+   # send frames to display
+    epd.display(frame_black, frame_red)
+
+except KeyboardInterrupt:
+	logging.info("ctrl + c:")
+	epd.init()
+	epd.Clear()
+	exit()
